@@ -1,0 +1,19 @@
+h3 {
+    margin: 0 0 10px;
+}
+
+pre {
+    background-color: #f5f5f5;
+    padding: 15px;
+}
+
+.calendar-component .cal-month-view .cal-open-day-events {
+    color: #000000;
+    background-color: #7befb2 !important;
+}
+
+.add-event-btn {
+    margin: 12px 5px;
+    padding: 6px;
+    border: 1px #ddd solid;
+}

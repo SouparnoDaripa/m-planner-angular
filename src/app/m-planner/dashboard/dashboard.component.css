@@ -1,0 +1,11 @@
+.dashboard-page {
+    margin-top: 35px;
+}
+
+.user-list {
+    border: #ddd 1px solid;
+}
+
+.user-list-header {
+    padding: 8px;
+}

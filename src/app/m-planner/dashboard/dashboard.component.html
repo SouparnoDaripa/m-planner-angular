@@ -1,0 +1,26 @@
+<app-navbar></app-navbar>
+<div class="dashboard-page container">
+    <div *ngIf="user.role == 2">
+        <div class="row">
+            <div class="col-md-3 col-sm-12">
+                <div class="user-list">
+                    <h4 class="user-list-header">User List</h4>
+                    <ul>
+                        <li *ngFor ="let user of users">
+                            <a [routerLink]="['/dashboard', user.userId]" routerLinkActive="active">
+                                {{user.firstName}} {{user.lastName}}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-9 col-sm-12">
+                <app-calendar></app-calendar>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="user.role == 1">
+        <app-calendar></app-calendar>
+    </div>
+</div>

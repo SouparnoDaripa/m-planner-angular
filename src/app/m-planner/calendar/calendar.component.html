@@ -1,0 +1,392 @@
+<div class="container calendar-component">
+  <div class="row" *ngIf = "userInfo.role == 2">
+    <div class="col-md-12">
+      <div class="add-event-btn">
+        <span>You can add a new event using Add New Event button.</span>
+        <button class="btn btn-info pull-right" (click)="handleEvent('Create', null)">
+          Add New Event
+        </button>
+        <div class="clearfix"></div>
+      </div>
+    </div>
+  </div>
+  <div class="row text-center">
+    <div class="col-md-4">
+      <div class="btn-group">
+        <div
+          class="btn btn-info"
+          mwlCalendarPreviousView
+          [view]="view"
+          [(viewDate)]="viewDate"
+          (viewDateChange)="closeOpenMonthViewDay()">
+          Previous
+        </div>
+        <div
+          class="btn btn-outline-secondary"
+          mwlCalendarToday
+          [(viewDate)]="viewDate"
+        >
+          Today
+        </div>
+        <div
+          class="btn btn-info"
+          mwlCalendarNextView
+          [view]="view"
+          [(viewDate)]="viewDate"
+          (viewDateChange)="closeOpenMonthViewDay()"
+        >
+          Next
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):'en' }}</h3>
+    </div>
+    <div class="col-md-4">
+      <div class="btn-group">
+        <div
+          class="btn btn-info"
+          (click)="setView(CalendarView.Month)"
+          [class.active]="view === CalendarView.Month"
+        >
+          Month
+        </div>
+        <div
+          class="btn btn-info"
+          (click)="setView(CalendarView.Week)"
+          [class.active]="view === CalendarView.Week"
+        >
+          Week
+        </div>
+        <div
+          class="btn btn-info"
+          (click)="setView(CalendarView.Day)"
+          [class.active]="view === CalendarView.Day"
+        >
+          Day
+        </div>
+      </div>
+    </div>
+  </div>
+  <br />
+  <div [ngSwitch]="view">
+    <mwl-calendar-month-view
+      *ngSwitchCase="CalendarView.Month"
+      [viewDate]="viewDate"
+      [events]="events"
+      [refresh]="refresh"
+      [activeDayIsOpen]="activeDayIsOpen"
+      (dayClicked)="dayClicked($event.day)"
+      (eventClicked)="handleEvent('Clicked', $event.event)"
+      (eventTimesChanged)="eventTimesChanged($event)"
+    >
+    </mwl-calendar-month-view>
+    <mwl-calendar-week-view
+      *ngSwitchCase="CalendarView.Week"
+      [viewDate]="viewDate"
+      [events]="events"
+      [refresh]="refresh"
+      (eventClicked)="handleEvent('Clicked', $event.event)"
+      (eventTimesChanged)="eventTimesChanged($event)"
+      (hourSegmentClicked)="createEvent($event.date)"
+    >
+    </mwl-calendar-week-view>
+    <mwl-calendar-day-view
+      *ngSwitchCase="CalendarView.Day"
+      [viewDate]="viewDate"
+      [events]="events"
+      [refresh]="refresh"
+      (eventClicked)="handleEvent('Clicked', $event.event)"
+      (eventTimesChanged)="eventTimesChanged($event)"
+      (hourSegmentClicked)="createEvent($event.date)"
+    >
+    </mwl-calendar-day-view>
+  </div>
+  
+  <ng-template #modalEdit let-close="close">
+    <div *ngIf="userInfo.role == 2">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Event</h5>
+        <button type="button" class="close" (click)="close()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="edit-modal">
+          <div class="form">
+            <div class="form-group">
+              <label for="event.title">Title</label>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="event.title"
+                (keyup)="refresh.next()"
+              />
+            </div>
+            <div class="row">
+              <div class="col-4">
+                <div class="form-group">
+                  <label for="event.start">Start Date</label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    mwlFlatpickr
+                    [(ngModel)]="event.start"
+                    (ngModelChange)="refresh.next()"
+                    [altInput]="true"
+                    [convertModelValue]="true"
+                    [enableTime]="true"
+                    dateFormat="Y-m-dTH:i"
+                    altFormat="F j, Y H:i"
+                    placeholder="Not set"
+                  />
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="form-group">
+                  <label for="event.end">End Date</label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    mwlFlatpickr
+                    [(ngModel)]="event.end"
+                    (ngModelChange)="refresh.next()"
+                    [altInput]="true"
+                    [convertModelValue]="true"
+                    [enableTime]="true"
+                    dateFormat="Y-m-dTH:i"
+                    altFormat="F j, Y H:i"
+                    placeholder="Not set"
+                  />
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="form-group">
+                  <label for="event.allDay">All Day required?</label>
+                  <input type="checkbox" class="form-control" [(ngModel)]="event.allDay">
+                </div>
+              </div>
+            </div>
+              <div class="row">
+                <div class="col-4">
+                  <div class="form-group">
+                    <label for="event.colorName">Color</label>
+                    <select class="color-select form-control" [(ngModel)] = "event.colorName" (change)="refresh.next()" >
+                      <option *ngFor="let color of colors | keyvalue" [value]="color.key">{{color.key}}</option>
+                    </select> 
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="form-group">
+                    <label for="event.color.primary">Primary</label>
+                    <input
+                      type="color"
+                      disabled="true"
+                      class="form-control"
+                      [(ngModel)]="event.color.primary"
+                      (change)="refresh.next()"
+                    />
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="form-group">
+                    <label for="event.color.secondary">Secondary</label>
+                    <input
+                      type="color"
+                      disabled="true"
+                      class="form-control"
+                      [(ngModel)]="event.color.secondary"
+                      (change)="refresh.next()"
+                    />
+                  </div>
+                </div>
+              </div>  
+            </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="updateEvent()">
+          Update
+        </button>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #modalCreate let-close="close">
+    <div *ngIf="userInfo.role == 2">
+      <div class="modal-header">
+        <h5 class="modal-title">Create Event</h5>
+        <button type="button" class="close" (click)="close()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="edit-modal">
+          <div class="form">
+            <div class="form-group">
+              <label for="event.title">Title</label>
+              <input
+                type="text"
+                placeholder="Title"
+                class="form-control"
+                [(ngModel)]="event.title"
+                (keyup)="refresh.next()"
+              />
+            </div>
+            <div class="row">
+              <div class="col-4">
+                <div class="form-group">
+                  <label for="event.start">Start Date</label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    mwlFlatpickr
+                    [(ngModel)]="event.start"
+                    (ngModelChange)="refresh.next()"
+                    [altInput]="true"
+                    [convertModelValue]="true"
+                    [enableTime]="true"
+                    dateFormat="Y-m-dTH:i"
+                    altFormat="F j, Y H:i"
+                    placeholder="Start Date"
+                  />
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="form-group">
+                  <label for="event.end">End Date</label>
+                  <input
+                    class="form-control"
+                    type="text"
+                    mwlFlatpickr
+                    [(ngModel)]="event.end"
+                    (ngModelChange)="refresh.next()"
+                    [altInput]="true"
+                    [convertModelValue]="true"
+                    [enableTime]="true"
+                    dateFormat="Y-m-dTH:i"
+                    altFormat="F j, Y H:i"
+                    placeholder="End Date"
+                  />
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="form-group">
+                  <label for="event.allDay">All Day required?</label>
+                  <input type="checkbox" class="form-control" [(ngModel)]="event.allDay">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-4">
+                <div class="form-group">
+                  <label for="event.colorName">Color</label>
+                  <select class="color-select form-control" [(ngModel)] = "event.colorName" (change)="refresh.next()" >
+                    <option *ngFor="let color of colors | keyvalue" [value]="color.key">{{color.key}}</option>
+                  </select> 
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="form-group">
+                  <label for="event.color.primary">Primary</label>
+                  <input
+                    type="color"
+                    disabled="true"
+                    class="form-control"
+                    [(ngModel)]="event.color.primary"
+                    (change)="refresh.next()"
+                  />
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="form-group">
+                  <label for="event.color.secondary">Secondary</label>
+                  <input
+                    type="color"
+                    disabled="true"
+                    class="form-control"
+                    [(ngModel)]="event.color.secondary"
+                    (change)="refresh.next()"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="addEvent()">
+          Save
+        </button>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #modalDetail let-close="close">
+    <div class="modal-header">
+        <h5 class="modal-title">Event View</h5>
+        <button type="button" class="close" (click)="close()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+      <div class="view-modal">
+        <div class="row">
+          <div class="col-12">
+              <h5>Title : {{event.title}}</h5>
+          </div>
+          <div class="col-12">
+              <p>Start : {{event.start | date}} {{event.start.toLocaleTimeString()}}</p>
+          </div>
+          <div class="col-12">
+              <p>End : {{event.end | date}} {{event.end.toLocaleTimeString()}}</p>
+          </div>
+          <div class="col-12">
+              <p>Color : <input type="color"
+                disabled="true"
+                [(ngModel)]="event.color.primary"
+                (change)="refresh.next()"/>
+              </p>
+          </div>
+          <div class="col-12">
+            <p>All Day : <span *ngIf="event.allDay == true">YES</span><span *ngIf="event.allDay == false">NO</span></p>
+          </div>
+          <div class="col-12" *ngIf="event.createdBy">
+            <p>Creator : {{event.createdBy}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="close()">
+        Close
+      </button>
+    </div>
+  </ng-template>
+
+  <ng-template #modalMessage let-close="close">
+    <div class="modal-header">
+        <h5 class="modal-title">Message Notification</h5>
+        <button type="button" class="close" (click)="close()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+      <div class="view-modal">
+        <div class="row">
+          <div class="col-12">
+              <p>By Clicking Yes, this event will be deleted permanently. Are you sure you want to delete this event ?</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="close()">
+        No
+      </button>
+      <button type="button" class="btn btn-outline-primary" (click)="deleteEvent(this.modalData.event)">
+        Yes
+      </button>
+    </div>
+  </ng-template>
+</div>
